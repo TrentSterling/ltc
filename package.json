@@ -1,8 +1,8 @@
 {
   "name": "ltc",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "private": true,
   "description": "ARC Light Studies: a standalone LTC lighting lab",
-  "scripts": {"test": "node qa/release.cjs && node qa/delivery.cjs", "build": "python tools/embed-ui.py"},
+  "scripts": {"test": "node qa/release.cjs && node qa/v5.cjs && node qa/v5-workflow.cjs && node qa/delivery.cjs", "test:shadows": "node qa/v5-shadow.cjs", "benchmark": "node qa/benchmark.cjs", "build": "python tools/embed-ui.py"},
   "devDependencies": {"playwright": "1.58.2"}
 }

@@ -78,7 +78,7 @@ async function check(name,fn){await fn();results.push({name,pass:true});console.
  });
  await check('Edited light and camera survive setup round trip',async()=>{
   const values=await page.evaluate(async()=>{const d=__LTC.exportSetup();const s=typeof d==='string'?JSON.parse(d):d;__LTC.setLightParam('intensity',7);await __LTC.importSetup(s);return {version:s.version,round:__LTC.exportSetup().lights,original:s.lights};});
-  assert.equal(values.version,4);assert.deepEqual(values.round,values.original);
+  assert.equal(values.version,5);assert.deepEqual(values.round,values.original);
  });
  await page.click('#tooltray [data-tool="workshop"]');
  for(const [width,height] of [[1440,900],[390,844],[320,740],[768,1024],[812,375]]){

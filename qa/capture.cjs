@@ -20,8 +20,8 @@ try{({chromium}=require('playwright'));}catch{({chromium}=require('C:/trontstack
   .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,12,18,.86),transparent 38%,transparent 72%,rgba(5,12,18,.93))}
   header{position:absolute;left:44px;top:30px}.eyebrow{color:#9bd5d5;font-size:13px;letter-spacing:3px;font-weight:600}h1{font-size:46px;line-height:1.12;font-weight:600;letter-spacing:-1.5px;margin:8px 0 10px}
   .caption{font-size:17px;color:#b8ccd6}.bottom{position:absolute;bottom:26px;left:44px;right:44px;display:flex;justify-content:space-between;align-items:end;font-size:15px;color:#d5e3e9}.url{font-family:Consolas,monospace;color:#a9dfe1}.credit{font-size:11px;color:#9eafb9;margin-top:5px}
-  </style><img class="scene" src="data:image/png;base64,${source.toString('base64')}"><div class="shade"></div><header><div class="eyebrow">ARC / INTERACTIVE LIGHTING LAB</div><h1>Light studies</h1><div class="caption">Real-time polygonal area lights</div></header><div class="bottom"><div>Paint surfaces. Shape light. Inspect the math.<div class="credit">Based on Linearly Transformed Cosines · Heitz et al., 2016</div></div><div class="url">tront.xyz/ltc</div></div>`);
+  </style><img class="scene" src="data:image/png;base64,${source.toString('base64')}"><div class="shade"></div><header><div class="eyebrow">ARC / INTERACTIVE LIGHTING LAB</div><h1>Light studies</h1><div class="caption">Real-time polygonal area lights</div></header><div class="bottom"><div>Paint light. Work surfaces. Explore soft shadows.<div class="credit">Based on Linearly Transformed Cosines · Heitz et al., 2016</div></div><div class="url">tront.xyz/ltc</div></div>`);
   await design.screenshot({path:path.resolve(__dirname,'../og-image.png')});
-  console.log('Captured 1200 x 630 og-image.png from the live Nocturne renderer');
+  console.log('Captured 1200 x 630 og-image.png from the live After Hours renderer');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,32 @@
+const path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict'),{pathToFileURL}=require('node:url');
+let chromium;try{({chromium}=require('playwright'));}catch{({chromium}=require('C:/trontstack/tront/og-templates/node_modules/playwright'));}
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:chromium.executablePath(),args:['--enable-webgl','--ignore-gpu-blocklist']});try{
+ const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[],results=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);await page.waitForFunction(()=>window.__LTC?.ready&&__LTC.frameCount>3);
+ const check=async(name,fn)=>{assert.ok(await fn(),name);console.log('PASS',name);results.push(name);};
+ const frame=async()=>{const n=await page.evaluate(()=>__LTC.frameCount);await page.waitForFunction(n=>__LTC.frameCount>n+2,n);};
+ const project=async(name)=>page.evaluate(name=>{const a=__LTC,m=a.scene.getObjectByName(name),p=m.localToWorld(new THREE.Vector3(0,0,.045)).project(a.camera),r=a.renderer.domElement.getBoundingClientRect();return {x:r.left+(p.x*.5+.5)*r.width,y:r.top+(.5-p.y*.5)*r.height};},name);
+ const p=await project('Maintenance panel');await page.mouse.click(p.x,p.y);
+ await check('Click selects the visible maintenance surface',()=>page.evaluate(()=>__LTC.v5.selection?.mesh.name==='Maintenance panel'&&__LTC.state.tool==='paint'));
+ await page.click('[data-brush-mode="coat"]');
+ await page.mouse.move(p.x-15,p.y);await page.mouse.down();await page.mouse.move(p.x+15,p.y,{steps:2});await page.mouse.up();
+ await check('Fast pointer stroke writes a continuous surface map',()=>page.evaluate(()=>{const a=__LTC,m=a.scene.getObjectByName('Maintenance panel'),map=a.v5.surfaceMaps.get(m);return map&&map.ctxA.getImageData(0,0,512,512).data.filter((v,i)=>i%4===3&&v>0).length>20;}));
+ await page.click('#undoPaint');await check('UI undo clears that whole stroke',()=>page.evaluate(()=>{const a=__LTC,map=a.v5.surfaceMaps.get(a.scene.getObjectByName('Maintenance panel'));return map.ctxA.getImageData(0,0,512,512).data.every(v=>v===0);}));
+ await page.click('#moveSurface');await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+55,p.y+20,{steps:5});await page.mouse.up();
+ await check('Panel drag moves its world position',()=>page.evaluate(()=>Math.abs(__LTC.scene.getObjectByName('Maintenance panel').position.x+3.35)>.05));
+ await page.evaluate(()=>{__LTC.setScene('afterhours',{reset:true});__LTC.sceneSecondary();});
+ await check('Sweep begins and a manual gesture cancels it',async()=>{assert.ok(await page.evaluate(()=>__LTC.v5.sweep));await page.mouse.click(100,300);return page.evaluate(()=>!__LTC.v5.sweep);});
+ await page.evaluate(()=>__LTC.scenePrimary());
+ const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=32;const x=c.getContext('2d');x.fillStyle='#ff0000';x.fillRect(0,0,32,32);return c.toDataURL().split(',')[1];});
+ await page.locator('#emissionFile').setInputFiles({name:'red.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+ await page.waitForFunction(()=>__LTC.v5.emissionMaps[1].getContext('2d').getImageData(128,128,1,1).data[0]===255);await frame();
+ await check('Imported red image reaches the GPU emission atlas',()=>page.evaluate(()=>{const a=__LTC,rt=a.targets.raw,x=Math.floor(rt.width*.5),y=Math.floor(rt.height*1.5/5);const p=a.samplePixel('raw',x,y);return p[0]>.9&&p[1]<.01&&p[2]<.01;}));
+ await page.selectOption('#emissionAnimation','1');await page.evaluate(()=>{const a=__LTC;if(a.state.frozen)a.toggleFreeze();});
+ const phase=await page.evaluate(()=>__LTC.lights[1].phase);await frame();await check('Emission animation advances on live frames',()=>page.evaluate(phase=>__LTC.lights[1].phase>phase,phase));
+ await page.evaluate(()=>__LTC.setScene('shadows'));await frame();const q=await page.evaluate(()=>{const a=__LTC,p=a.v5.blocker.position.clone().project(a.camera),r=a.renderer.domElement.getBoundingClientRect();return{x:r.left+(p.x*.5+.5)*r.width,y:r.top+(.5-p.y*.5)*r.height};});
+ await page.mouse.move(q.x,q.y);await page.mouse.down();await page.mouse.move(q.x+65,q.y+15,{steps:5});await page.mouse.up();
+ await check('Blocker drag updates analytic shadow position',()=>page.evaluate(()=>__LTC.v5.selection.type==='blocker'&&Math.abs(__LTC.v5.shadow.x)>.1));
+ await check('Version 4 setup remains readable',()=>page.evaluate(async()=>{const a=__LTC;a.setScene('gallery');const d=a.exportSetup();d.version=4;delete d.v5;d.lights.forEach(l=>delete l.paintMotion);await a.importSetup(d);return a.state.scene==='gallery'&&a.lights[1].shape==='star';}));
+ await check('Scene reset restores base floor finish and blocker defaults',()=>page.evaluate(()=>{const a=__LTC;a.setScene('shadows');const u=a.activeFloor().userData.pair.uniforms,original=u.uBase.value.getHex();u.uBase.value.set('#ff0000');a.v5.shadow.x=2;a.setScene('shadows',{reset:true});return u.uBase.value.getHex()===original&&a.v5.shadow.x===0;}));
+ assert.deepEqual(errors,[]);fs.writeFileSync(path.join(__dirname,'v5-workflow-results.json'),JSON.stringify({results,errors},null,2));console.log('COMPLETE '+results.length+' editing workflow checks passed');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
