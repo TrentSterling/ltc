@@ -1,0 +1,5 @@
+node_modules/
+qa/*.png
+qa/*.json
+qa/*.html
+__pycache__/
